@@ -1,46 +1,52 @@
 import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 
 export default function App() {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: 4.6097,
+          longitude: -74.0817,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+      >
+        <Marker
+          coordinate={{ latitude: 4.6097, longitude: -74.0817 }}
+          title={"Punto HighMaps"}
+          description={"Zona de prueba en Bogotá"}
+        />
+      </MapView>
+
+      <View style={styles.overlay}>
         <Text style={styles.title}>HighMaps 🌿</Text>
-        <Text style={styles.subtitle}>Tu guía segura en Bogotá</Text>
       </View>
-      
-      <View style={styles.body}>
-        <Text style={styles.status}>Estamos configurando el mapa...</Text>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212', // Fondo oscuro como el techno
   },
-  header: {
-    padding: 40,
-    alignItems: 'center',
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 50,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 10,
+    borderRadius: 20,
   },
   title: {
-    fontSize: 32,
+    color: '#4CAF50',
     fontWeight: 'bold',
-    color: '#4CAF50', // Verde cannabis
-  },
-  subtitle: {
     fontSize: 18,
-    color: '#ffffff',
-  },
-  body: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  status: {
-    color: '#888',
-    fontStyle: 'italic',
   },
 });
