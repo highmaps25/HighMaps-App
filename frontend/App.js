@@ -1,19 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location'; // <--- Importamos el GPS
+
+// --- ESTILO JSON (El que ya te gustó) ---
+const mapStyle = [
+  { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
+  { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#1b5e20" }] },
+  { "featureType": "road", "elementType": "geometry.fill", "stylers": [{ "color": "#2c2c2c" }] },
+  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] }
+];
 
 export default function App() {
-  const [selectedSpot, setSelectedSpot] = useState(null);
+  const [location, setLocation] = useState(null);
 
-  const handleReport = () => {
+  // 1. PEDIR PERMISO DE GPS AL ABRIR LA APP
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert("Error", "Necesitamos GPS para HighMaps 🌿");
+        return;
+      }
+      let userLocation = await Location.getCurrentPositionAsync({});
+      setLocation(userLocation.coords);
+    })();
+  }, []);
+
+  // 2. FUNCIÓN PARA REPORTAR (Ahora usa tu ubicación real)
+  const handleReport = async () => {
+    let currentPos = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = currentPos.coords;
+    
     Alert.alert(
-      "Nuevo Reporte HighMaps",
-      "¿Qué quieres reportar en tu ubicación actual?",
-      [
-        { text: "🌿 Todo Relax", onPress: () => Alert.alert("¡Gracias!", "Spot marcado como seguro.") },
-        { text: "👮 Presencia Policial", onPress: () => Alert.alert("⚠️ Aviso", "Alerta enviada a la comunidad."), style: "destructive" },
-        { text: "Cancelar", style: "cancel" }
-      ]
+      "Reporte HighMaps 🌿",
+      `Punto registrado en:\nLat: ${latitude.toFixed(4)}\nLong: ${longitude.toFixed(4)}`,
+      [{ text: "¡Firme!", style: "default" }]
     );
   };
 
@@ -21,40 +43,28 @@ export default function App() {
     <View style={styles.container}>
       <MapView
         style={styles.map}
+        customMapStyle={mapStyle}
+        showsUserLocation={true}       // <--- AQUÍ APARECE EL PUNTO AZUL
+        followsUserLocation={true}     // <--- EL MAPA TE SIGUE
+        showsMyLocationButton={true}   // <--- BOTÓN DE CENTRAR
         initialRegion={{
           latitude: 4.6300, longitude: -74.0700,
-          latitudeDelta: 0.05, longitudeDelta: 0.05,
+          latitudeDelta: 0.02, longitudeDelta: 0.02,
         }}
       >
-        {/* Un pin de ejemplo en Chapinero */}
-        <Marker 
-          coordinate={{ latitude: 4.6480, longitude: -74.0600 }}
-          onPress={() => setSelectedSpot({title: "Chapinero Alto", info: "Ambiente relax, cerca a parques."})}
-        >
+        {/* Marcador de prueba en Chapinero */}
+        <Marker coordinate={{ latitude: 4.6480, longitude: -74.0600 }}>
           <Text style={{fontSize: 30}}>🌿</Text>
         </Marker>
       </MapView>
 
-      {/* Título de la App */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>HighMaps 🌿</Text>
+        <Text style={styles.headerText}>HighMaps Bogotá 🌿</Text>
       </View>
 
-      {/* Botón de Reporte (El "+" de abajo) */}
       <TouchableOpacity style={styles.fab} onPress={handleReport}>
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
-
-      {/* Tarjeta informativa cuando tocas un pin */}
-      {selectedSpot && (
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>{selectedSpot.title}</Text>
-          <Text style={styles.cardSub}>{selectedSpot.info}</Text>
-          <TouchableOpacity onPress={() => setSelectedSpot(null)} style={styles.closeBtn}>
-            <Text style={{color: 'white', fontWeight: 'bold'}}>CERRAR</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }
@@ -64,23 +74,15 @@ const styles = StyleSheet.create({
   map: { ...StyleSheet.absoluteFillObject },
   header: {
     position: 'absolute', top: 50, alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, borderRadius: 25,
-    borderWidth: 1, borderColor: '#4CAF50'
+    backgroundColor: 'rgba(0,0,0,0.85)', padding: 15, borderRadius: 30,
+    borderWidth: 1, borderColor: '#4CAF50', elevation: 5
   },
   headerText: { color: '#4CAF50', fontWeight: 'bold', fontSize: 18 },
   fab: {
-    position: 'absolute', bottom: 30, right: 30,
-    backgroundColor: '#4CAF50', width: 65, height: 65, borderRadius: 33,
+    position: 'absolute', bottom: 40, right: 30,
+    backgroundColor: '#1b5e20', width: 65, height: 65, borderRadius: 33,
     justifyContent: 'center', alignItems: 'center', elevation: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3
+    borderWidth: 2, borderColor: '#4CAF50'
   },
-  fabIcon: { color: 'white', fontSize: 40, marginTop: -5 },
-  infoCard: {
-    position: 'absolute', bottom: 110, left: 20, right: 20,
-    backgroundColor: '#1A1A1A', padding: 20, borderRadius: 20,
-    borderLeftWidth: 5, borderLeftColor: '#4CAF50'
-  },
-  cardTitle: { color: '#4CAF50', fontSize: 20, fontWeight: 'bold' },
-  cardSub: { color: 'white', marginTop: 5, opacity: 0.8 },
-  closeBtn: { marginTop: 15, backgroundColor: '#333', padding: 10, borderRadius: 10, alignItems: 'center' }
+  fabIcon: { color: 'white', fontSize: 40, marginTop: -5 }
 });
